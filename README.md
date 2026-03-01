@@ -1,11 +1,15 @@
-# Využití prostorových dat ve statistické praxi, s důrazem na území České republiky
+# Využití prostorových dat 🌐 ve statistické praxi
+## s důrazem na území České republiky
+
+<p align="center">
+  <img src="praha-statspol.png" alt="Členská schůze 2026 v kontextu města Prahy"/>
+</p>
 
 Odborná přednáška na [členské schůzi České statistické společnosti](https://www.statspol.cz/clenska-schuze-2026/) v pátek 6. března 2026
 
-
 Struktura repozitáře:
-- `JLA-robust-prezka.odp` prezentace ve formátu Open Office Impress
-- `JLA-robust-prezka.pdf` prezentace ve formátu Adobe Acrobat Reader
+- `JLA-statspol-prezka.odp` prezentace ve formátu Open Office Impress
+- `JLA-statspol-prezka.pdf` prezentace ve formátu Adobe Acrobat Reader
 - `/R/1-geocoding.R` získání dat a kreslení map / geocoding + [`{RCzechia}`](https://rczechia.jla-data.net/) package
 - `/R/2-vánoční-kapr.R` získání dat a kreslení map / staťák + [`{czso}`](https://petrbouchal.xyz/czso/) package 
 - `/R/3-projekce.R` volba mapové projekce a její dopady

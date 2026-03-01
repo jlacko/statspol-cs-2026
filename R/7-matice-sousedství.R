@@ -2,7 +2,6 @@
 
 library(tidyverse) # protože dplyr, ggplot2 a spol.
 library(RCzechia) # česká geodata
-library(sf)
 
 # Průměrné spotřebitelské ceny vybraných výrobků - potravinářské výrobky
 kapr <- czso::czso_get_table("012052", dest_dir = "./data")  %>% 
@@ -67,7 +66,7 @@ platy <- czso::czso_get_table("110080", dest_dir = "./data") %>%
 
 # pupek rybnikářského světa
 pupek <- tidygeocoder::geo("Rybník Svět, Třeboň",
-                            method = "osm") %>% 
+                            method = "google") %>% 
    sf::st_as_sf(coords = c("long", "lat"), crs = 4326)
 
 model_src <- chrt_src %>% 

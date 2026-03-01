@@ -1,49 +1,30 @@
 library(sf) # for spatial data handling
 library(dplyr) # for general data frame processing
-library(osmdata) # to get data in from OSM
 library(leaflet) # to show data interactively
 library(hereR) # interface to routing engine
 library(TSP) # to solve TSP
 
-
-# bbox = http://bboxfinder.com - okolí Srní
-oblast_zajmu <- c(13.411856,49.013107,
-                  13.709173,49.178742)
-
-
-# acquire bar data - https://wiki.openstreetmap.org/wiki/Map_features#Amenity 
-search_res <- opq(bbox = oblast_zajmu) %>%
-  add_osm_feature(key = "amenity", 
-                  value = c("bar", "restaurant", "pub")) %>%
-  osmdata_sf(quiet = T) 
-
-# pro jistotu - kdyby selhal internet...
-# saveRDS(search_res, "./data/hospody-srni.rds")
-# search_res <- readRDS("./data/hospody-srni.rds")
-
-
-# pulls bars as points
-bars <- search_res$osm_points %>%  
-  filter(!is.na(name)) %>% 
-  select(name)
-
+# 14 krajských statistických úřadů (respektive 13 :)
+stataky <- readr::read_csv2("./data/krajske-spravy-czso.csv") %>% 
+   tidygeocoder::geocode(address = adresa, method = "google") %>% 
+   sf::st_as_sf(coords = c("long", "lat"), crs = 4326)
+   
 # show results
-leaflet(bars) %>% 
+leaflet(stataky) %>% 
   addProviderTiles("CartoDB.Positron") %>% 
   addCircleMarkers(fillColor = "red",
                    radius = 5,
                    stroke = F,
                    fillOpacity = .75,
-                   label = ~ name)
+                   label = ~ nazev)
 
-
-# a sample of bars to make the matrix fit a web page
-vzorek <- bars %>% 
+# a sample of locations to make the matrix fit a page
+vzorek <- stataky %>% 
   slice_sample(n = 5)
 
-# a beer tankard icon for nicer display
-beer_icon <- makeAwesomeIcon(
-  icon = "beer",
+# a fancy icon for nicer display
+stats_icon <- makeAwesomeIcon(
+  icon = "calculator",
   iconColor = "black",
   markerColor = "blue",
   library = "fa"
@@ -53,16 +34,16 @@ beer_icon <- makeAwesomeIcon(
 leaflet(vzorek) %>% 
   addProviderTiles("CartoDB.Positron") %>% 
   addAwesomeMarkers(data = vzorek,
-                    icon = beer_icon, # the awesome icon declared earlier
-                    label = ~name)
+                    icon = stats_icon, # the awesome icon declared earlier
+                    label = ~nazev)
 
 # distance matrix "as the crow flies"
 crow_matrix <- st_distance(vzorek,
                            vzorek)
 
 # naming the dimensions for easier orientation
-rownames(crow_matrix) <- vzorek$name
-colnames(crow_matrix) <- vzorek$name
+rownames(crow_matrix) <- vzorek$nuts3
+colnames(crow_matrix) <- vzorek$nuts3
 
 # a visual check; note that the matrix has a {units} dimension
 crow_matrix
@@ -75,13 +56,13 @@ crow_tsp <- crow_matrix %>%
   TSP() %>%
   solve_TSP()
 
-# the tour (crawl) as sequence of bars
-vzorek$name[as.numeric(crow_tsp)]
+# the tour (crawl) as sequence of locations
+vzorek$nuts3[as.numeric(crow_tsp)]
 
 
 stops <- as.numeric(crow_tsp) # sequence of "cities" as indices
 
-# bars in sequence, with the first repeated in last place
+# locations in sequence, with the first repeated in last place
 crow_result <- vzorek[c(stops, stops[1]), ] %>%
   st_combine() %>% # combined to a single object
   st_cast("LINESTRING") # & presented as a route (a line)
@@ -92,29 +73,31 @@ leaflet(crow_result) %>%
   addPolylines(color = "crimson",
                popup = "as the crow flies...") %>% 
   addAwesomeMarkers(data = vzorek,
-                    icon = beer_icon, # the awesome icon declared earlier
-                    label = ~name)
+                    icon = stats_icon, # the awesome icon declared earlier
+                    label = ~nuts3)
 
 
 # set the HERE API key; mine is stored in an envir variable
 hereR::set_key(Sys.getenv("HERE_API_KEY"))
 
 # a full set of all combinations - 5 × 5 = 25 rows
-indices <- expand.grid(from = seq_along(vzorek$name), 
-                       to = seq_along(vzorek$name))
+indices <- expand.grid(from = seq_along(vzorek$nuts3), 
+                       to = seq_along(vzorek$nuts3))
+
+tictoc::tic()
 
 # call routing API for all permutations & store for future use
 for (i in seq_along(indices$from)) {
   
   active_route <- hereR::route(origin = vzorek[indices$from[i], ],
                                destination = vzorek[indices$to[i], ],
-                               transport_mode = "bicycle") %>% 
+                               transport_mode = "car") %>% 
     # technical columns for easier use and presentation
     mutate(idx_origin = indices$from[i],
            idx_destination = indices$to[i],
-           route_name = paste(vzorek$name[indices$from[i]],
+           route_name = paste(vzorek$nuts3[indices$from[i]],
                         ">>",
-                        vzorek$name[indices$to[i]])) %>% 
+                        vzorek$nuts3[indices$to[i]])) %>% 
     relocate(idx_origin, idx_destination, route_name) %>% 
     st_zm() # drop z dimension, as it messes up with leaflet viz
   
@@ -129,6 +112,8 @@ for (i in seq_along(indices$from)) {
   
 }
 
+tictoc::toc()
+
 # a quick overview of structure of the routes data frame
 glimpse(routes)
 
@@ -138,8 +123,8 @@ distance_matrix <- matrix(routes$distance,
                           ncol = nrow(vzorek))
 
 # naming the dimensions for easier orientation
-rownames(distance_matrix) <- vzorek$name
-colnames(distance_matrix) <- vzorek$name
+rownames(distance_matrix) <- vzorek$nuts3
+colnames(distance_matrix) <- vzorek$nuts3
 
 # a visual check; the units are meters (distance)
 distance_matrix
@@ -150,8 +135,8 @@ distance_tsp <- distance_matrix %>%
   ATSP() %>%
   solve_TSP()
 
-# the tour (crawl) as sequence of bars
-vzorek$name[as.numeric(distance_tsp)]
+# the tour (crawl) as sequence of locations
+vzorek$nuts3[as.numeric(distance_tsp)]
 
 stops <- as.numeric(distance_tsp) # sequence of "cities" as indices
 
@@ -173,8 +158,8 @@ leaflet(distance_result) %>%
   addPolylines(color = "GoldenRod",
                popup = ~route_name) %>% 
   addAwesomeMarkers(data = vzorek,
-                    icon = beer_icon, # the awesome icon declared earlier
-                    label = ~name)
+                    icon = stats_icon, # the awesome icon declared earlier
+                    label = ~nuts3)
 
 # distance matrix based on travel time
 duration_matrix <- matrix(routes$duration,
@@ -182,8 +167,8 @@ duration_matrix <- matrix(routes$duration,
                           ncol = nrow(vzorek))
 
 # names make the distance matrix easier to interpret
-rownames(duration_matrix) <- vzorek$name
-colnames(duration_matrix) <- vzorek$name
+rownames(duration_matrix) <- vzorek$nuts3
+colnames(duration_matrix) <- vzorek$nuts3
 
 # a visual check; the units are seconds (time)
 duration_matrix
@@ -193,8 +178,8 @@ duration_tsp <- duration_matrix %>%
   ATSP() %>% 
   solve_TSP() 
 
-# the tour (crawl) as sequence of bars
-vzorek$name[as.numeric(duration_tsp)]
+# the tour (crawl) as sequence of locations
+vzorek$nuts3[as.numeric(duration_tsp)]
 
 # the same steps as for distance based matrix
 stops <- as.numeric(duration_tsp)
@@ -214,5 +199,5 @@ leaflet(duration_result) %>%
   addPolylines(color = "cornflowerblue",
                popup = ~route_name) %>% 
   addAwesomeMarkers(data = vzorek,
-                    icon = beer_icon,
-                    label = ~ name)
+                    icon = stats_icon,
+                    label = ~ nuts3)
