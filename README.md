@@ -1,11 +1,10 @@
-# Využití prostorových dat 🌐 ve statistické praxi
-## s důrazem na území České republiky
+# 🌐 Využití prostorových dat ve statistické praxi, s důrazem na území České republiky
+
+Odborná přednáška na [členské schůzi České statistické společnosti](https://www.statspol.cz/clenska-schuze-2026/) v pátek 6. března 2026
 
 <p align="center">
   <img src="praha-statspol.png" alt="Členská schůze 2026 v kontextu města Prahy"/>
 </p>
-
-Odborná přednáška na [členské schůzi České statistické společnosti](https://www.statspol.cz/clenska-schuze-2026/) v pátek 6. března 2026
 
 Struktura repozitáře:
 - `JLA-statspol-prezka.odp` prezentace ve formátu Open Office Impress
