@@ -42,8 +42,8 @@ crow_matrix <- st_distance(vzorek,
                            vzorek)
 
 # naming the dimensions for easier orientation
-rownames(crow_matrix) <- vzorek$nuts3
-colnames(crow_matrix) <- vzorek$nuts3
+rownames(crow_matrix) <- vzorek$mesto
+colnames(crow_matrix) <- vzorek$mesto
 
 # a visual check; note that the matrix has a {units} dimension
 crow_matrix
@@ -57,7 +57,7 @@ crow_tsp <- crow_matrix %>%
   solve_TSP()
 
 # the tour (crawl) as sequence of locations
-vzorek$nuts3[as.numeric(crow_tsp)]
+vzorek$mesto[as.numeric(crow_tsp)]
 
 
 stops <- as.numeric(crow_tsp) # sequence of "cities" as indices
@@ -74,15 +74,15 @@ leaflet(crow_result) %>%
                popup = "as the crow flies...") %>% 
   addAwesomeMarkers(data = vzorek,
                     icon = stats_icon, # the awesome icon declared earlier
-                    label = ~nuts3)
+                    label = ~mesto)
 
 
 # set the HERE API key; mine is stored in an envir variable
 hereR::set_key(Sys.getenv("HERE_API_KEY"))
 
 # a full set of all combinations - 5 × 5 = 25 rows
-indices <- expand.grid(from = seq_along(vzorek$nuts3), 
-                       to = seq_along(vzorek$nuts3))
+indices <- expand.grid(from = seq_along(vzorek$mesto), 
+                       to = seq_along(vzorek$mesto))
 
 tictoc::tic()
 
@@ -95,9 +95,9 @@ for (i in seq_along(indices$from)) {
     # technical columns for easier use and presentation
     mutate(idx_origin = indices$from[i],
            idx_destination = indices$to[i],
-           route_name = paste(vzorek$nuts3[indices$from[i]],
+           route_name = paste(vzorek$mesto[indices$from[i]],
                         ">>",
-                        vzorek$nuts3[indices$to[i]])) %>% 
+                        vzorek$mesto[indices$to[i]])) %>% 
     relocate(idx_origin, idx_destination, route_name) %>% 
     st_zm() # drop z dimension, as it messes up with leaflet viz
   
@@ -123,8 +123,8 @@ distance_matrix <- matrix(routes$distance,
                           ncol = nrow(vzorek))
 
 # naming the dimensions for easier orientation
-rownames(distance_matrix) <- vzorek$nuts3
-colnames(distance_matrix) <- vzorek$nuts3
+rownames(distance_matrix) <- vzorek$mesto
+colnames(distance_matrix) <- vzorek$mesto
 
 # a visual check; the units are meters (distance)
 distance_matrix
@@ -136,7 +136,7 @@ distance_tsp <- distance_matrix %>%
   solve_TSP()
 
 # the tour (crawl) as sequence of locations
-vzorek$nuts3[as.numeric(distance_tsp)]
+vzorek$mesto[as.numeric(distance_tsp)]
 
 stops <- as.numeric(distance_tsp) # sequence of "cities" as indices
 
@@ -159,7 +159,7 @@ leaflet(distance_result) %>%
                popup = ~route_name) %>% 
   addAwesomeMarkers(data = vzorek,
                     icon = stats_icon, # the awesome icon declared earlier
-                    label = ~nuts3)
+                    label = ~mesto)
 
 # distance matrix based on travel time
 duration_matrix <- matrix(routes$duration,
@@ -167,8 +167,8 @@ duration_matrix <- matrix(routes$duration,
                           ncol = nrow(vzorek))
 
 # names make the distance matrix easier to interpret
-rownames(duration_matrix) <- vzorek$nuts3
-colnames(duration_matrix) <- vzorek$nuts3
+rownames(duration_matrix) <- vzorek$mesto
+colnames(duration_matrix) <- vzorek$mesto
 
 # a visual check; the units are seconds (time)
 duration_matrix
@@ -179,7 +179,7 @@ duration_tsp <- duration_matrix %>%
   solve_TSP() 
 
 # the tour (crawl) as sequence of locations
-vzorek$nuts3[as.numeric(duration_tsp)]
+vzorek$mesto[as.numeric(duration_tsp)]
 
 # the same steps as for distance based matrix
 stops <- as.numeric(duration_tsp)
@@ -200,4 +200,4 @@ leaflet(duration_result) %>%
                popup = ~route_name) %>% 
   addAwesomeMarkers(data = vzorek,
                     icon = stats_icon,
-                    label = ~ nuts3)
+                    label = ~ mesto)
