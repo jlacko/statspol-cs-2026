@@ -19,4 +19,11 @@ Struktura repozitáře:
 - `/R/8-využití-AI.R` extrakce lokalit a souřadnic z textu písně
 - `/data` podkladová data pro vzdálenostní matici + lokální cache pro soubory z ČSÚ
 
-Techické upozornění: skripty na pozadí "potichu" využívají API klíče pro služby HERE (modelový příklad geomarketing - výpočet dochozí vzdálenosti) a Google (geocoding a Gemini AI). Tyto služby vyžadují registraci, a bez nastaveného klíče (dělá se v `.Renviron` souboru) nemusí ód vracet očekávaný výsledek.
+Techické upozornění: 
+
+skripty na pozadí "potichu" využívají API klíče, konkrétně
+
+- pro služby HERE (modelový příklad geomarketing - výpočet dochozí vzdálenosti)
+- pro služby Google (geocoding a Gemini AI)
+
+Tyto služby vyžadují registraci, a bez nastaveného klíče (dělá se v `.Renviron` souboru) nemusí kód vracet očekávaný výsledek.
