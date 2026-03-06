@@ -17,3 +17,6 @@ Struktura repozitáře:
 - `/R/6-matice-vzdáleností.R` konstrukce a využití vzdálenostní matice
 - `/R/7-matice-sousedství.R` konstrukce a využití matic sousedství a vah
 - `/R/8-využití-AI.R` extrakce lokalit a souřadnic z textu písně
+- `/data` podkladová data pro vzdálenostní matici + lokální cache pro soubory z ČSÚ
+
+Techické upozornění: skripty na pozadí "potichu" využívají API klíče pro služby HERE (modelový příklad geomarketing - výpočet dochozí vzdálenosti) a Google (geocoding a Gemini AI). Tyto služby vyžadují registraci, a bez nastaveného klíče (dělá se v `.Renviron` souboru) nemusí ód vracet očekávaný výsledek.
